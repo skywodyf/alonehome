@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 다른 mapper와 중복되지 않도록 네임스페이스 기재 -->
+<mapper namespace="interior">
+	 <select id="listAll" resultType="com.example.final01.model.interior.dto.InteriorDTO">
+ <include refid="paging_header" />
+  select intbno,inttitle,intwriter,sname,intcontent,intregdate,intviewcnt,show,
+			        (select count(*) from intreply where intbno=b.intbno) cnt
+			        from intboard b, member m
+			        <include refid="search" />
+			        order by intbno desc 
+			        <include refid="paging_footer" />
+  </select>		
+   <sql id="paging_header">
+   select *
+			from (
+			    select rownum as rn, A.*
+			    from (
+  </sql>
+  <sql id="paging_footer">
+          ) A    
+			) where rn between #{start} and #{end}
+  </sql>	   
+   <insert id="insert">
+  insert into intboard (intbno,inttitle,intcontent,intwriter,intregdate,intviewcnt)
+		values (seq_intboard.nextval,#{inttitle},#{intcontent},#{intwriter},sysdate,#{intviewcnt})
+	</insert>     
+ 
+
+  <!-- 첨부파일 정보 저장 -->
+ <insert id="addAttach">
+  insert into attach (fullName, intbno) values
+  ( #{fullName}, seq_intboard.currval )
+ </insert>
+
+<!-- 레코드 갯수 계산  --> 
+ <select id="countArticle" resultType="int">
+  select count(*)
+  from intboard b, member m
+  where b.intwriter=m.user_name
+ </select>
+ 
+ <!-- 검색기능-->
+ <sql id="search">
+  <choose>
+   <when test="search_option != 'all' ">
+    where b.intwriter=m.user_name
+     and show='y'
+     and ${search_option} like #{keyword}
+   </when>
+   <otherwise>
+    where b.intwriter=m.user_name
+     and show='y'
+     and (intwriter like #{keyword} 
+     or inttitle like #{keyword} 
+     or intcontent like #{keyword})
+   </otherwise>
+  </choose>
+ </sql>
+ 
+  <!-- 조회수 증가 처리 -->
+ <update id="increaseViewcnt">
+  update intboard set intviewcnt=intviewcnt+1
+  where intbno=#{intbno}
+ </update>
+ 
+ <select id="read" resultType="com.example.final01.model.interior.dto.InteriorDTO">
+  select intbno,inttitle,intwriter,sname,intcontent,intregdate,intviewcnt
+	from intboard b, member m
+	where b.intwriter=m.user_name and intbno=#{intbno}
+ </select>
+ 
+  <!-- 첨부파일 목록 -->
+ <select id="getAttach" resultType="String">
+  select fullName
+  from attach
+  where intbno=#{intbno}
+  order by intregdate desc
+ </select>
+ 
+  <!-- 첨부파일 레코드 삭제 -->
+ <delete id="deleteFile">
+  delete from attach
+  where fullName=#{fullName}
+ </delete>
+ 
+  <!-- 게시물 내용 수정 -->
+ <update id="update">
+  update intboard
+  set inttitle=#{inttitle}, content=#{intcontent}
+  where intbno=#{intbno}
+ </update>
+ 
+ <!-- 새로운 첨부파일 추가  -->
+ <insert id="updateAttach">
+  insert into attach (fullName, intbno) values
+  ( #{fullName}, #{intbno} )
+ </insert>
+ 
+  <!-- 게시물 삭제 -->
+
+ <delete id="delete">
+  update intboard set show='n' where intbno=#{intbno}
+ </delete>
+
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,26 @@
+create table member(
+user_name varchar2(50) not null, --이름
+user_email varchar2(50)not null primary key, --이메일
+user_sname varchar2(50) not null, --닉네임
+user_pwd varchar2(50) not null, --비밀번호
+user_phone varchar2(50), --핸드폰번호
+join_date date default sysdate
+);
+
+insert into member (user_name,user_email,user_sname,user_pwd,user_phone)
+values ('홍길동','hong@gmail.com','호부호형','1234','01012345678');
+
+select user_name from member
+where user_email='hong@gmail.com' and user_pwd='1234';
+
+select user_name from member
+where user_email='hong@gmail.com' and user_pwd='2222';
+
+drop table member; --테이블삭제
+
+commit;
+
+select * from member
+where user_email='hong@gmail.com';
+
+select * from member;

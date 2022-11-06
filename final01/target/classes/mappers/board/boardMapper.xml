@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="board">
+    <insert id="insert">
+        insert into board (id,title,content,member_id)
+        values (seq_board.nextval, #{title}, #{content}, #{member_id})
+    </insert>
+
+    <select id="listAll" resultType="com.example.final01.model.board.dto.BoardDTO">
+    select *
+    	from (
+    		select rownum as rn, A.*
+    		from (
+        	select id,title,member_id,user_email,content,reg_date,view_cnt,show_YN,
+        	(select count(*) from comments where board_id = b.id and show_YN=1) comment_cnt
+        	from board b, member m
+        	where b.member_id=m.user_email and show_YN=1
+        	order by id desc
+        	) A
+        ) where rn between #{start} and #{end}
+        <choose>
+            <when test="search_option == 'member_id' ">
+                and member_id like #{keyword}
+            </when>
+            <when test="search_option == 'title' ">
+                and title like #{keyword}
+            </when>
+            <when test="search_option == 'content' ">
+                and content like #{keyword}
+            </when>
+            <when test="search_option == 'all' ">
+                and (member_id like #{keyword}
+                or title like #{keyword}
+                or content like #{keyword})
+            </when>
+        </choose>
+    </select>
+
+    <select id="list_view" resultType="com.example.final01.model.board.dto.BoardDTO" >
+        select *
+        from board
+        where show_YN=1
+    </select>
+
+    <select id="countArticle" resultType="int">
+        select count(*)
+        from board b
+        where show_YN=1
+        <choose>
+            <when test="search_option == 'member_id' ">
+                and member_id like #{keyword}
+            </when>
+            <when test="search_option == 'title' ">
+                and title like #{keyword}
+            </when>
+            <when test="search_option == 'content' ">
+                and content like #{keyword}
+            </when>
+            <when test="search_option == 'all' ">
+                and (member_id like #{keyword}
+                or title like #{keyword}
+                or content like #{keyword})
+            </when>
+        </choose>
+    </select>
+
+    <select id="read" resultType="com.example.final01.model.board.dto.BoardDTO">
+        select id,title,member_id,sname,content,reg_date,view_cnt
+        from board b, member m
+        where b.member_id=m.user_email and id=#{id}
+    </select>
+
+    <update id="increaseViewcnt">
+        update board
+        set view_cnt=view_cnt+1
+        where id=#{id}
+    </update>
+
+    <update id="update">
+        update board
+        set title=#{title}, content=#{content}, update_date=now()
+        where id=#{id}
+    </update>
+
+    <delete id="delete">
+        update board
+        set show_YN=0
+        where id=#{id}
+    </delete>
+</mapper>
